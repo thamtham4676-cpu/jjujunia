@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sạp Card Juniaa.wi</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #fff0f3;
+            color: #4a2828;
+            margin: 0;
+            padding: 20px;
+            background-image: radial-gradient(#ffb7c5 10%, transparent 11%), radial-gradient(#ffb7c5 10%, transparent 11%);
+            background-size: 40px 40px;
+            background-position: 0 0, 20px 20px;
+        }
+        header {
+            background-color: rgba(255, 255, 255, 0.85);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 8px 16px rgba(255, 183, 197, 0.3);
+            margin-bottom: 30px;
+            border: 2px solid #ffb7c5;
+            text-align: center;
+        }
+        h1 { color: #d1495b; margin: 0 0 5px 0; font-size: 32px; }
+        .subtitle { font-size: 16px; color: #ff7675; font-weight: bold; }
+        .peach-icon { font-size: 35px; display: block; margin-bottom: 5px; }
+        .grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 25px; max-width: 1200px; margin: 0 auto; }
+        .card-item {
+            background: white; width: 230px; padding: 15px; border-radius: 18px;
+            box-shadow: 0 6px 12px rgba(255, 183, 197, 0.2); border: 2px solid #ffcad4;
+            text-align: left; transition: transform 0.3s ease;
+        }
+        .card-item:hover { transform: translateY(-8px); }
+        .card-image-box {
+            width: 100%; height: 280px; background-color: #ffe5ec; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center; margin-bottom: 15px;
+            border: 1px dashed #ffb7c5; overflow: hidden;
+        }
+        .card-image-box img { width: 100%; height: 100%; object-fit: cover; }
+        .card-name { font-weight: bold; font-size: 18px; color: #4a2828; margin-bottom: 6px; }
+        .card-price { color: #d1495b; font-weight: bold; font-size: 18px; margin-bottom: 12px; }
+        .buy-btn {
+            display: block; width: 100%; background-color: #ff7675; color: white; border: none;
+            padding: 10px; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 15px; text-align: center;
+        }
+        .loading { font-size: 18px; color: #ff7675; font-weight: bold; text-align: center; width: 100%; }
+
+
+        /* Nền mờ phía sau popup */
+.popup-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000;
+}
+/* Khung nội dung popup */
+.popup-content {
+    background: white;
+    width: 90%; max-width: 400px;
+    padding: 25px; border-radius: 20px;
+    border: 3px solid #ffcad4;
+    box-shadow: 0 10px 25px rgba(255, 118, 117, 0.3);
+    text-align: left;
+    animation: popupShow 0.3s ease;
+}
+@keyframes popupShow {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+.popup-content h3 { color: #d1495b; text-align: center; margin-top: 0; font-size: 20px; }
+.popup-info { background: #fff0f3; padding: 12px; border-radius: 12px; margin-bottom: 15px; border: 1px dashed #ffb7c5; }
+.popup-info p { margin: 5px 0; font-size: 15px; }
+.popup-message { font-size: 14.5px; line-height: 1.5; color: #5c3a3a; margin-bottom: 20px; }
+.popup-message p { margin: 8px 0; }
+.thanks { text-align: center; font-weight: bold; color: #ff7675; margin-top: 12px !important; }
+/* Khu vực 2 nút bấm */
+.popup-buttons { display: flex; gap: 15px; justify-content: center; }
+.pop-btn { padding: 10px 25px; border: none; border-radius: 10px; font-weight: bold; font-size: 15px; cursor: pointer; width: 100%; }
+.btn-huya { background: #ffe5ec; color: #ff7675; border: 1px solid #ffcad4; }
+.btn-huya:hover { background: #ffcad4; }
+.btn-dongy { background: #ff7675; color: white; }
+.btn-dongy:hover { background: #d1495b; }
+
+
+
+
+
+/* --- HỆ THỐNG TRẠNG THÁI HẾT HÀNG --- */
+.card-item.sold-out {
+    opacity: 0.6; /* Làm mờ card */
+    filter: grayscale(40%); /* Giảm bớt độ tươi của màu sắc */
+    pointer-events: none; /* Khóa không cho bấm vào card nữa */
+    position: relative;
+}
+.card-item.sold-out .buy-btn {
+    background-color: #9e9e9e !important; /* Đổi nút thành màu xám */
+    color: #ffffff !important;
+    cursor: not-allowed;
+}
+
+/* --- HIỆU ỨNG QUÉT SÁNG (SHINE) CHO CARD HIẾM --- */
+.card-item.rare-card .card-image-box {
+    position: relative;
+    border: 2px solid #ff7675; /* Viền nổi bật hơn */
+    box-shadow: 0 0 10px rgba(255, 118, 117, 0.4);
+}
+.card-item.rare-card .card-image-box::after {
+    content: '';
+    position: absolute;
+    top: -50%; left: -60%;
+    width: 30%; height: 200%;
+    background: linear-gradient(
+        to right, 
+        rgba(255,255,255,0) 0%, 
+        rgba(255,255,255,0.6) 50%, 
+        rgba(255,255,255,0) 100%
+    );
+    transform: rotate(25deg);
+    animation: shineEffect 3s infinite ease-in-out;
+}
+@keyframes shineEffect {
+    0% { left: -60%; }
+    15% { left: 130%; }
+    100% { left: 130%; }
+}
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="peach-icon">🍑</div>
+        <h1>juniaa.wi</h1>
+        <div class="subtitle">✨ BẠN MUỐN MẤY BUMP TRÀ ĐÀO ĐẤY ✨</div>
+
+        <div class="header-info">
+        <p>🔗 <strong>Facebook:</strong> <a href="https://www.facebook.com/vy.tuong.742763" target="_blank" style="color: #d1495b; font-weight: bold; text-decoration: underline;">Vy Tuong (juniaa.wi)</a></p>
+    </div>
+    </header>
+
+
+    <main>
+        <div id="shop-grid" class="grid">
+            <div class="loading">Sạp trà đào đang tải card... 🍑</div>
+        </div>
+    </main>
+
+
+
+    <!-- BẢNG THÔNG BÁO POPUP KHI BẤM MUA -->
+<div id="popup-thongbao" class="popup-overlay" style="display: none;">
+    <div class="popup-content">
+        <h3>🍑 CHI TIẾT ĐƠN HÀNG 🍑</h3>
+        <div class="popup-info">
+            <p><strong>Mã card:</strong> <span id="pop-id"></span></p>
+            <p><strong>Tên card:</strong> <span id="pop-name"></span></p>
+            <p><strong>Trạng thái:</strong> <span id="pop-status"></span></p>
+        </div>
+
+        <!-- PHẦN THÔNG TIN STK GIAO DỊCH MỚI THÊM VÀO -->
+        <div class="popup-info" style="background: #fff9db; border-color: #fab005; margin-top: -5px;">
+            <p style="text-align: center; font-weight: bold; color: #f59f00; margin-bottom: 8px;">💳 CHỈ GIAO DỊCH TÀI KHOẢN </p>
+            <p><strong>Ngân hàng:</strong> MB Bank </p>
+            <p><strong>Số tài khoản:</strong> 0775***295 </p>
+            <p><strong>Chủ tài khoản:</strong> CÁP TƯỜNG VY </p>
+        </div>
+        
+        <div class="popup-message">
+            <p>Ib mes <strong>Vy Tuong (ins: juniaa.wi)</strong> về tt card và đợi chốc lát tớ sẽ trả lời ạ.</p>
+            <p>Mes của tớ đôi khi hong ib được thì bạn vào post 2 tcn để lại cmt tớ sẽ chủ động ib lại </p>
+            <p>Tớ ut ck nên bạn xem clg của tớ nữa nhé!! Để an toàn thì bạn có thể ib hỏi buyer từng gd với tớ nhoo...</p>
+            <p class="thanks">Cảm ơn bạn đã ghé sạp của tớ <333</p>
+        </div>
+        <div class="popup-buttons">
+            <button id="btn-cancel" class="pop-btn btn-huya"> Lần sauu nhoo</button>
+            <button id="btn-confirm" class="pop-btn btn-dongy"> Muaa </button>
+        </div>
+    </div>
+</div>
+
+
+
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbxjwd50uF1gURuWqRRrAwmo08Hs-IRYnUK4flIejj2vfSCFkeVtYeNbOmXs2mkdNU25KA/exec"; 
+
+async function loadCards() {
+    const grid = document.getElementById('shop-grid');
+    
+    // 1. Đọc nhanh dữ liệu đã lưu lần trước (nếu có) để hiện lên trước cho khách xem luôn
+    const cachedData = localStorage.getItem('sap_card_cache');
+    if (cachedData) {
+        renderCards(JSON.parse(cachedData));
+    }
+
+    try {
+        // 2. Chạy ngầm việc lấy dữ liệu mới nhất từ Google Sheet
+        const response = await fetch(API_URL);
+        const cards = await response.json();
+        
+        // 3. Cập nhật lại bộ nhớ tạm và làm mới màn hình
+        localStorage.setItem('sap_card_cache', JSON.stringify(cards));
+        renderCards(cards);
+    } catch (error) {
+        console.error("Lỗi tải dữ liệu:", error);
+        if (!cachedData) {
+            grid.innerHTML = "<div class='loading'>Có lỗi xảy ra khi kết nối sạp card!</div>";
+        }
+    }
+}
+
+function renderCards(cards) {
+    const grid = document.getElementById('shop-grid');
+    grid.innerHTML = ""; 
+
+    if (cards.length === 0) {
+        grid.innerHTML = "<div class='loading'>Cảm ơn bạn đã ghé sạp ạ, nhưng sạp hiện tại hết card mất òi, bạn có thể quay lại sau nha~ 🍑</div>";
+        return;
+    }
+
+    cards.forEach(card => {
+        // Chuẩn hóa chuỗi để kiểm tra trạng thái trên Sheet
+        const currentStatus = (card.status || '').trim().toLowerCase();
+        
+        let statusClass = '';
+        let buttonText = 'BUMP 🍑';
+        let isSoldOut = false;
+
+        // 1. Kiểm tra trạng thái Hết hàng / Đã bán
+        if (currentStatus === 'hết hàng' || currentStatus === 'sold' || currentStatus === 'soldout') {
+            statusClass = ' sold-out';
+            buttonText = 'SOLD 🍑';
+            isSoldOut = true;
+        } 
+        // 2. Kiểm tra nếu là Card Hiếm để tạo hiệu ứng lấp lánh
+        else if (currentStatus === 'kèm') {
+            statusClass = ' rare-card';
+        }
+
+        const cardElement = document.createElement('div');
+        cardElement.className = 'card-item' + statusClass;
+        
+        // Nếu hết hàng thì nút bấm sẽ bị vô hiệu hóa (disabled)
+        cardElement.innerHTML = `
+            <div class="card-image-box">
+                <img src="${card.imageUrl || 'https://via.placeholder.com/230x280.png?text=No+Image'}" alt="${card.name}">
+            </div>
+            <div class="card-name">${card.name}</div>
+            <div class="card-price">${card.price}</div>
+            <button class="buy-btn" ${isSoldOut ? 'disabled' : ''} onclick="chotDon('${card.articleId}', '${card.name}', '${card.status || 'Còn hàng'}')"> ${buttonText}</button>
+        `;
+        grid.appendChild(cardElement);
+    });
+}
+
+function chotDon(id, name, status) {
+    const popup = document.getElementById('popup-thongbao');
+    const btnConfirm = document.getElementById('btn-confirm');
+    const btnCancel = document.getElementById('btn-cancel');
+
+    document.getElementById('pop-id').innerText = id;
+    document.getElementById('pop-name').innerText = name;
+    document.getElementById('pop-status').innerText = status;
+
+    popup.style.display = 'flex';
+
+    // Khi khách bấm "Muaa"
+    btnConfirm.onclick = function() {
+        popup.style.display = 'none'; // Ẩn popup
+        
+        // Nhảy thẳng qua link bài viết Facebook để khách đọc thông tin và tự ib/cmt
+        const fbPostLink = "https://www.facebook.com/vy.tuong.742763";
+        window.open(fbPostLink, '_blank'); 
+    };
+
+    // Khi khách bấm "Lần sauu nhoo"
+    btnCancel.onclick = function() {
+        popup.style.display = 'none';
+    };
+}
+// Chạy hàm khi tải trang
+loadCards();
+    </script>
+</body>
+</html>
